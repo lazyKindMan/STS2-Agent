@@ -19,7 +19,7 @@ CardRarity = Literal["basic", "common", "uncommon", "rare", "ancient", "event", 
 CardOwner = Literal["ironclad", "silent", "regent", "necrobinder", "defect", "colorless"]
 TargetType = Literal["self", "enemy", "all_enemies", "ally", "all_allies", "none"]
 ChoiceType = Literal["card_reward", "map_path", "shop_buy", "event_select", "combat_turn", "rest_site"]
-ModeType = Literal["assist", "autoplay"]
+ModeType = Literal["assist"]
 
 
 class CardValueCurve(BaseModel):
@@ -170,17 +170,8 @@ class STSDecision(BaseModel):
     candidate_rankings: list[str] = Field(default_factory=list, description="Ranked alternative option ids")
 
 
-class STSExecutionState(BaseModel):
-    """Execution controls for autoplay mode."""
-
-    action_queue: list[dict[str, Any]] = Field(default_factory=list, description="Pending actions for execution")
-    last_action: Optional[str] = Field(default=None, description="Last executed action id")
-    last_result: Optional[str] = Field(default=None, description="Last execution result summary")
-    retry_count: int = Field(default=0, ge=0, description="Consecutive retry attempts")
-
-
-class STSGraphState(BaseModel):
-    """Graph state for STS2 decision support and autoplay workflows."""
+class STSAssistGraphState(BaseModel):
+    """Graph state for STS2 assistant workflows."""
 
     mode: ModeType = Field(default="assist", description="Workflow mode")
     messages: Annotated[list, add_messages] = Field(default_factory=list, description="Conversation messages")
@@ -191,7 +182,9 @@ class STSGraphState(BaseModel):
     combat: STSCombatState = Field(default_factory=STSCombatState, description="Current combat snapshot")
     choice_context: Optional[STSChoiceContext] = Field(default=None, description="Current unresolved decision")
     decision: Optional[STSDecision] = Field(default=None, description="Most recent model decision")
-    execution: STSExecutionState = Field(default_factory=STSExecutionState, description="Autoplay execution state")
+    ui_context: dict[str, Any] = Field(default_factory=dict, description="Optional UI context from the helper mod")
     long_term_memory: str = Field(default="", description="Persistent user strategy memory")
-    requires_human_confirm: bool = Field(default=False, description="Whether manual confirmation is required")
-    halt_reason: str = Field(default="", description="Reason for halting autoplay")
+
+
+class STSGraphState(STSAssistGraphState):
+    """Backward-compatible alias for existing imports."""
